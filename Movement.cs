@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Movement : MonoBehaviour
-{ 
-    public CharacterController controller;
+{
+    public float AngleSpeed = 0.75f;
+    public float angle;
     private Animator anim;
+     
 
     public float speed = 6f;
     
     public float turnSmoothTme = 0.1f;
     float turnSmoothVelocity;
+    public Vector3 direction;
 
     void start()
     {
@@ -22,16 +25,20 @@ public class Movement : MonoBehaviour
     {
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
-        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
+        var direction = new Vector3(horizontal, 0f, vertical).normalized;
 
         if (direction.magnitude >= 0.1f)
         {
-            float targetAngle = Mathf.Atan2(direction.x, direction.y);
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTme);
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+           this.direction = Vector3.Lerp(direction, this.direction, AngleSpeed);
+            transform.LookAt(transform.position + this.direction);
 
-            Vector3 MoveDir = Quaternion.Euler(0f, targetAngle, of);
-            controller.Move(direction * speed * Time.deltaTime);
+            transform.position += this.direction * speed * Time.deltaTime;
         }
-    }    
+    }
+    void LateUpdate()
+    {
+        Vector3 pos = transform.position;
+        pos.y = Terrain.activeTerrain.SampleHeight(transform.position);
+        transform.position = pos;
+    }
 }
